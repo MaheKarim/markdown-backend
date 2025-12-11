@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\AdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,5 +38,10 @@ Route::middleware('api')->group(function () {
         // Additional functionality
         Route::post('/documents/{id}/export-pdf', [DocumentController::class, 'exportPdf']);
         Route::post('/convert-pdf', [DocumentController::class, 'convertPdf']);
+        
+        // Admin routes (protected by admin middleware)
+        Route::middleware('admin')->prefix('admin')->group(function () {
+            Route::get('/dashboard', [AdminController::class, 'dashboard']);
+        });
     });
 });

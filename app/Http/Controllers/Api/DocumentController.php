@@ -7,6 +7,7 @@ use App\Models\Document;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class DocumentController extends Controller
 {
@@ -15,8 +16,8 @@ class DocumentController extends Controller
      */
     public function index(): JsonResponse
     {
-        $documents = Document::orderBy('updated_at', 'desc')->get();
-        return response()->json($documents);
+      $documents = Document::where('user_id', Auth::id())->orderBy('updated_at', 'desc')->get();
+      return response()->json($documents);
     }
 
     /**
@@ -24,18 +25,22 @@ class DocumentController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-        $document = Document::create($request->all());
-        
-        return response()->json($document, 201);
+      $validator = Validator::make($request->all(), [
+        'title' => 'required|string|max:255',
+        'content' => 'required|string',
+      ]);
+  
+      if ($validator->fails()) {
+        return response()->json($validator->errors(), 422);
+      }
+  
+      $document = Document::create([
+        'title' => $request->title,
+        'content' => $request->content,
+        'user_id' => Auth::id(),
+      ]);
+      
+      return response()->json($document, 201);
     }
 
     /**
@@ -43,8 +48,8 @@ class DocumentController extends Controller
      */
     public function show(string $id): JsonResponse
     {
-        $document = Document::findOrFail($id);
-        return response()->json($document);
+      $document = Document::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+      return response()->json($document);
     }
 
     /**
@@ -52,19 +57,19 @@ class DocumentController extends Controller
      */
     public function update(Request $request, string $id): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'title' => 'sometimes|required|string|max:255',
-            'content' => 'sometimes|required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-        $document = Document::findOrFail($id);
-        $document->update($request->all());
-        
-        return response()->json($document);
+      $validator = Validator::make($request->all(), [
+        'title' => 'sometimes|required|string|max:255',
+        'content' => 'sometimes|required|string',
+      ]);
+  
+      if ($validator->fails()) {
+        return response()->json($validator->errors(), 422);
+      }
+  
+      $document = Document::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+      $document->update($request->all());
+      
+      return response()->json($document);
     }
 
     /**
@@ -72,10 +77,10 @@ class DocumentController extends Controller
      */
     public function destroy(string $id): JsonResponse
     {
-        $document = Document::findOrFail($id);
-        $document->delete();
-        
-        return response()->json(null, 204);
+      $document = Document::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+      $document->delete();
+      
+      return response()->json(null, 204);
     }
 
     /**
